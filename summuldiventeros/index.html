@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matemáticas Divertidas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 950px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .score-board {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .score-item {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .score-item.blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-item.green {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .score-label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-size: 1.5em;
+        }
+
+        .exercise-section {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            min-height: 300px; /* Altura mínima para evitar saltos bruscos */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .control-section {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .problem {
+            font-size: 2em;
+            text-align: center;
+            margin: 20px 0;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .input-area {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        input[type="text"] {
+            width: 150px;
+            padding: 15px;
+            font-size: 1.5em;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            text-align: center;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 10px rgba(118, 75, 162, 0.3);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-restart {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
+        .btn-answers {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .feedback {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            display: block;
+        }
+
+        .feedback.incorrect {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            display: block;
+        }
+
+        .final-message {
+            text-align: center;
+            animation: fadeIn 0.8s ease-in;
+            display: none;
+        }
+
+        .final-emoji {
+            font-size: 4em;
+            margin-bottom: 15px;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        .final-title {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .final-text {
+            font-size: 1.3em;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-20px);}
+            60% {transform: translateY(-10px);}
+        }
+
+        .answers-table {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .correct-row {
+            background-color: #d4edda;
+        }
+
+        .incorrect-row {
+            background-color: #f8d7da;
+        }
+        
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8em; }
+            .container { padding: 20px; }
+            .input-area { flex-direction: column; align-items: center; }
+            button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Sumas, multiplicaciones y divisiones 🎯</h1>
+        
+        <div class="score-board">
+            <div class="score-item blue">
+                <div class="score-value" id="exerciseInfo">Ejercicio 1 de 20</div>
+            </div>
+            <div class="score-item green">
+                <div class="score-label">Puntuación</div>
+                <div class="score-value" id="scoreInfo">0 (0%)</div>
+            </div>
+        </div>
+
+        <div class="exercise-section">
+            <!-- Contenedor para el juego activo -->
+            <div id="gameplayArea">
+                <div class="problem" id="problem">Generando...</div>
+                
+                <div class="input-area">
+                    <input type="text" id="answer" placeholder="?" maxlength="8" autocomplete="off">
+                </div>
+
+                <div class="buttons">
+                    <button class="btn-check" onclick="checkAnswer()">✓ Comprobar</button>
+                </div>
+            </div>
+
+            <!-- Feedback inmediato (correcto/incorrecto) -->
+            <div class="feedback" id="feedback"></div>
+
+            <!-- Contenedor para el mensaje final -->
+            <div id="finalMessage" class="final-message">
+                <span class="final-emoji" id="finalEmoji"></span>
+                <h2 class="final-title" id="finalTitle"></h2>
+                <p class="final-text" id="finalText"></p>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <div class="buttons">
+                <button class="btn-restart" onclick="restartGame()">↻ Reiniciar</button>
+                <button class="btn-save" onclick="saveScore()">💾 Guardar puntuación</button>
+                <button class="btn-answers" onclick="toggleAnswers()">📊 Ver Respuestas</button>
+            </div>
+        </div>
+
+        <div class="answers-table" id="answersTable" style="display: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Operación</th>
+                        <th>Tu Respuesta</th>
+                        <th>Solución</th>
+                    </tr>
+                </thead>
+                <tbody id="answersBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const SCORMMMaxScore = 10;
+        const SCORMMinScore = 0;
+        let SCORMRawScore = 0;
+        let currentExercise = 1;
+        let currentScore = 0;
+        let correctAnswers = 0;
+        let totalAnswered = 0;
+        let exercises = [];
+        let userAnswers = [];
+
+        function generateExercises() {
+            exercises = [];
+            for (let i = 0; i < 20; i++) {
+                const useMultiplication = Math.random() < 0.5;
+                let num1, num2, multDivResult;
+                let opSymbol = '';
+                
+                if (useMultiplication) {
+                    do { num1 = Math.floor(Math.random() * 21) - 10; } while ([0, 1, -1].includes(num1));
+                    do { num2 = Math.floor(Math.random() * 21) - 10; } while ([0, 1, -1].includes(num2));
+                    multDivResult = num1 * num2;
+                    opSymbol = '·';
+                } else {
+                    do { num2 = Math.floor(Math.random() * 17) - 8; } while ([0, 1, -1].includes(num2));
+                    const possibleQuotients = [-3, -2, 2, 3];
+                    const quotient = possibleQuotients[Math.floor(Math.random() * possibleQuotients.length)];
+                    num1 = quotient * num2;
+                    multDivResult = quotient;
+                    opSymbol = ':';
+                }
+                
+                const numAddSub = Math.random() < 0.5 ? 1 : 2;
+                let extraNumbers = [];
+                for (let j = 0; j < numAddSub; j++) {
+                    let num;
+                    do { num = Math.floor(Math.random() * 21) - 10; } while (num === 0);
+                    extraNumbers.push(num);
+                }
+
+                let components = [];
+                components.push({ type: 'block', val: multDivResult, n1: num1, n2: num2, op: opSymbol });
+                extraNumbers.forEach(n => { components.push({ type: 'single', val: n }); });
+
+                for (let k = components.length - 1; k > 0; k--) {
+                    const j = Math.floor(Math.random() * (k + 1));
+                    [components[k], components[j]] = [components[j], components[k]];
+                }
+
+                let finalExpressionDisplay = '';
+                let currentCalcValue = 0;
+
+                components.forEach((comp, index) => {
+                    let textPart = '';
+                    const formatNum = (n, isFirstInExpression) => {
+                        if (n < 0 && !isFirstInExpression) return `(${n})`;
+                        return n.toString();
+                    };
+
+                    if (comp.type === 'single') {
+                        textPart = formatNum(comp.val, index === 0);
+                    } else {
+                        const n1Str = formatNum(comp.n1, index === 0);
+                        const n2Str = formatNum(comp.n2, false);
+                        textPart = `${n1Str} ${comp.op} ${n2Str}`;
+                    }
+
+                    if (index === 0) {
+                        finalExpressionDisplay = textPart;
+                        currentCalcValue = comp.val;
+                    } else {
+                        const op = Math.random() < 0.5 ? '+' : '-';
+                        finalExpressionDisplay += ` ${op} ${textPart}`;
+                        if (op === '+') currentCalcValue += comp.val;
+                        else currentCalcValue -= comp.val;
+                    }
+                });
+
+                exercises.push({
+                    answer: Math.round(currentCalcValue * 100) / 100,
+                    display: `${finalExpressionDisplay} = ?`
+                });
+            }
+        }
+
+        function displayExercise() {
+            if (currentExercise <= 20) {
+                const ex = exercises[currentExercise - 1];
+                document.getElementById('problem').textContent = ex.display;
+                document.getElementById('answer').value = '';
+                document.getElementById('feedback').style.display = 'none';
+                document.getElementById('answer').focus();
+                updateScoreboard();
+            }
+        }
+
+        function checkAnswer() {
+            const inputVal = document.getElementById('answer').value.replace(',', '.');
+            const userAnswer = parseFloat(inputVal);
+            const correctAnswer = exercises[currentExercise - 1].answer;
+            const feedback = document.getElementById('feedback');
+
+            if (isNaN(userAnswer)) {
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = '⚠️ Por favor, introduce un número';
+                feedback.style.display = 'block';
+                return;
+            }
+
+            const isCorrect = Math.abs(userAnswer - correctAnswer) < 0.01;
+
+            userAnswers.push({
+                exercise: currentExercise,
+                problem: exercises[currentExercise - 1].display.replace(' = ?', ''),
+                userAnswer: userAnswer,
+                correctAnswer: correctAnswer,
+                isCorrect: isCorrect
+            });
+
+            totalAnswered++;
+
+            if (isCorrect) {
+                correctAnswers++;
+                currentScore += 0.5;
+                SCORMRawScore = currentScore;
+                feedback.className = 'feedback correct';
+                feedback.textContent = '✓ ¡Correcto! ¡Muy bien! 🎉';
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = `✗ Incorrecto. La respuesta correcta es ${correctAnswer}`;
+            }
+
+            feedback.style.display = 'block';
+            updateScoreboard();
+
+            const btn = document.querySelector('.btn-check');
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.disabled = false;
+                if (currentExercise < 20) {
+                    currentExercise++;
+                    displayExercise();
+                } else {
+                    showFinalScreen();
+                }
+            }, 2500);
+        }
+
+        function showFinalScreen() {
+            // Ocultar elementos de juego
+            document.getElementById('gameplayArea').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none'; // Ocultar el feedback del último ejercicio
+
+            const finalDiv = document.getElementById('finalMessage');
+            const emojiSpan = document.getElementById('finalEmoji');
+            const titleH2 = document.getElementById('finalTitle');
+            const textP = document.getElementById('finalText');
+
+            let emoji = '';
+            let title = '';
+            let message = '';
+            const score = currentScore;
+
+            if (score >= 8) {
+                emoji = '🏆😎🚀';
+                title = `¡INCREÍBLE! Has obtenido ${score.toFixed(1)} puntos`;
+                message = "¡Eres un auténtico genio de las matemáticas! Lo has bordado. ¡Sigue así, crack!";
+            } else if (score >= 5) {
+                emoji = '👍📚🙂';
+                title = `¡BUEN TRABAJO! Has obtenido ${score.toFixed(1)} puntos`;
+                message = "Vas por muy buen camino. Has aprobado, pero sé que puedes llegar a lo más alto. ¡Inténtalo de nuevo!";
+            } else {
+                // Emojis actualizados: Cara triste, brazo de fuerza, estrella (suerte)
+                emoji = '😔💪⭐'; 
+                title = `¡VAYA! Has obtenido ${score.toFixed(1)} puntos`;
+                message = "No te desanimes. Las matemáticas requieren práctica. ¡Vuelve a intentarlo y seguro que mejoras esa nota!";
+            }
+
+            emojiSpan.textContent = emoji;
+            titleH2.textContent = title;
+            textP.textContent = message;
+            
+            finalDiv.style.display = 'block';
+        }
+
+        function updateScoreboard() {
+            document.getElementById('exerciseInfo').textContent = `Ejercicio ${currentExercise} de 20`;
+            const percentage = totalAnswered > 0 ? ((correctAnswers / totalAnswered) * 100).toFixed(0) : 0;
+            document.getElementById('scoreInfo').textContent = `${currentScore.toFixed(1)} (${percentage}%)`;
+        }
+
+        function restartGame() {
+            currentExercise = 1;
+            currentScore = 0;
+            correctAnswers = 0;
+            totalAnswered = 0;
+            userAnswers = [];
+            generateExercises();
+            
+            // Restaurar vista de juego
+            document.getElementById('gameplayArea').style.display = 'block';
+            document.getElementById('finalMessage').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('answersTable').style.display = 'none';
+            document.getElementById('answersBody').innerHTML = '';
+            
+            displayExercise();
+            updateScoreboard();
+        }
+
+        function saveScore() {
+            // Usamos el feedback normal si estamos en juego, o un alert suave si estamos en pantalla final
+            // para no romper el layout.
+            // Para simplicidad, usaremos el mismo div de feedback si está visible, 
+            // o cambiamos el texto del titulo final momentaneamente.
+            
+            if(document.getElementById('finalMessage').style.display === 'block') {
+                const title = document.getElementById('finalTitle');
+                const originalText = title.textContent;
+                title.textContent = "💾 ¡Puntuación guardada correctamente!";
+                setTimeout(() => {
+                    title.textContent = originalText;
+                }, 2000);
+            } else {
+                const feedback = document.getElementById('feedback');
+                feedback.className = 'feedback correct';
+                feedback.textContent = `💾 Puntuación guardada: ${currentScore.toFixed(1)} puntos`;
+                feedback.style.display = 'block';
+                setTimeout(() => {
+                    if (currentExercise <= 20) feedback.style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        function toggleAnswers() {
+            const table = document.getElementById('answersTable');
+            const tbody = document.getElementById('answersBody');
+            
+            if (table.style.display === 'none') {
+                tbody.innerHTML = '';
+                if(userAnswers.length === 0) {
+                    const row = tbody.insertRow();
+                    const cell = row.insertCell(0);
+                    cell.colSpan = 4;
+                    cell.textContent = "Todavía no has respondido ninguna pregunta.";
+                } else {
+                    userAnswers.forEach(item => {
+                        const row = tbody.insertRow();
+                        row.className = item.isCorrect ? 'correct-row' : 'incorrect-row';
+                        row.insertCell(0).textContent = item.exercise;
+                        row.insertCell(1).textContent = item.problem;
+                        row.insertCell(2).textContent = item.userAnswer;
+                        row.insertCell(3).textContent = item.correctAnswer;
+                    });
+                }
+                table.style.display = 'block';
+                table.scrollIntoView({behavior: "smooth"});
+            } else {
+                table.style.display = 'none';
+            }
+        }
+
+        document.getElementById('answer').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const btn = document.querySelector('.btn-check');
+                if (!btn.disabled && document.getElementById('feedback').style.display === 'none') {
+                    checkAnswer();
+                }
+            }
+        });
+
+        generateExercises();
+        displayExercise();
+    </script>
+</body>
+</html>
