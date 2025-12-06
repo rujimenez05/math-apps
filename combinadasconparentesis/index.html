@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operaciones combinadas con paréntesis</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 900px; /* Aumentado ligeramente para mejor vista en escritorio */
+            width: 100%;
+            overflow-y: auto; 
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #f0f4ff;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 5px;
+            margin-top: 0;
+        }
+
+        .section-box {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 3px solid #667eea;
+        }
+
+        .section-title {
+            color: #667eea;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .score-board {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .score-item {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 8px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .exercise {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 1.5em; /* Ligeramente más grande para que se vean bien los números */
+            text-align: center;
+            border: 3px solid #667eea;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .input-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+
+        input[type="number"] {
+            padding: 12px;
+            font-size: 1.2em;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            width: 150px;
+            text-align: center;
+            font-family: 'Comic Sans MS', cursive;
+            -moz-appearance: textfield; /* Quitar flechas en firefox */
+        }
+        
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            color: #333;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .btn-restart {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+        }
+
+        .btn-answers {
+            background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+            color: #333;
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 1.1em;
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            min-height: 20px;
+        }
+
+        .correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+        
+        .final-message {
+            font-size: 1.3em;
+            text-align: center;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .answers-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        .answers-table th, .answers-table td {
+            padding: 12px;
+            border: 2px solid #667eea;
+            text-align: center;
+        }
+
+        .answers-table th {
+            background: #667eea;
+            color: white;
+            font-size: 1.1em;
+        }
+
+        .answers-table tr:nth-child(even) {
+            background: #f0f4ff;
+        }
+
+        .answers-table .correct-row {
+            background: #d4edda !important;
+        }
+
+        .answers-table .incorrect-row {
+            background: #f8d7da !important;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        /* Instrucciones texto */
+        .instructions-text {
+            font-size: 0.95em;
+            line-height: 1.4;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Operaciones combinadas con paréntesis</h1>
+
+    <!-- Sección 1: Instrucciones -->
+    <div class="section-box">
+        <div class="section-title">Instrucciones</div>
+        <p class="instructions-text">
+            Escribe tu solución en la casilla vacía y da a la tecla enter del teclado o bien al botón "Comprueba la solución" para que se corrija el ejercicio. Puedes empezar desde cero haciendo clic en el botón Reiniciar. Cuando se acabe el ejercicio haz clic en el botón Guardar la solución.
+        </p>
+    </div>
+
+    <!-- Sección 2: Puntuaciones -->
+    <div class="section-box">
+        <div class="section-title">Puntuaciones</div>
+        <div class="score-board">
+            <div class="score-item" id="exercise-counter">Ejercicio 1 de 20</div>
+            <div class="score-item" id="score-display">Puntos: 0 (0%)</div>
+        </div>
+    </div>
+
+    <!-- Sección 3: Enunciados y Juego -->
+    <div class="section-box" id="game-area">
+        <div class="section-title">Operación</div>
+        
+        <div id="problem-container" class="exercise">
+            <!-- La operación aparecerá aquí -->
+        </div>
+
+        <div id="input-container" class="input-area">
+            <input type="number" id="user-answer" placeholder="?" autocomplete="off">
+            <button class="btn-check" id="btn-check" onclick="checkAnswer()">Comprueba la solución</button>
+        </div>
+
+        <div id="feedback-msg" class="feedback hidden"></div>
+        
+        <div id="final-feedback" class="final-message hidden"></div>
+    </div>
+
+    <!-- Sección 4: Resto de botones -->
+    <div class="section-box">
+        <div class="button-group">
+            <button class="btn-restart" onclick="restartGame()">Reiniciar</button>
+            <button class="btn-save" onclick="saveScore()">Guardar la solución</button>
+            <button class="btn-answers" onclick="toggleAnswers()">Ver respuestas</button>
+        </div>
+        
+        <!-- Tabla de respuestas (Oculta por defecto) -->
+        <div id="answers-section" class="hidden">
+            <table class="answers-table">
+                <thead>
+                    <tr>
+                        <th>Operación</th>
+                        <th>Tu Respuesta</th>
+                        <th>Solución</th>
+                    </tr>
+                </thead>
+                <tbody id="answers-body">
+                    <!-- Filas generadas dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Variables SCORM
+    const SCORMMaxScore = 10;
+    const SCORMMinScore = 0;
+    var SCORMRawScore = 0;
+
+    // Variables del Juego
+    let currentExercise = 1;
+    const totalExercises = 20;
+    let score = 0;
+    let correctCount = 0;
+    let attemptedCount = 0;
+    let currentSolution = 0;
+    let currentQuestionText = "";
+    let isWaiting = false; // Para evitar clicks múltiples durante el feedback
+    let userHistory = []; // Array para guardar {question, userVal, correctVal, isRight}
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', () => {
+        initGame();
+        
+        // Listener para la tecla Enter
+        document.getElementById("user-answer").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                checkAnswer();
+            }
+        });
+    });
+
+    function initGame() {
+        SCORMRawScore = 0;
+        currentExercise = 1;
+        score = 0;
+        correctCount = 0;
+        attemptedCount = 0;
+        userHistory = [];
+        isWaiting = false;
+
+        updateScoreBoard();
+        
+        // Resetear interfaz
+        document.getElementById('problem-container').classList.remove('hidden');
+        document.getElementById('input-container').classList.remove('hidden');
+        document.getElementById('final-feedback').classList.add('hidden');
+        document.getElementById('final-feedback').innerHTML = '';
+        document.getElementById('answers-section').classList.add('hidden');
+        
+        generateQuestion();
+    }
+
+    // Generador de números aleatorios
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // FUNCIONES DE GENERACIÓN CON RESTRICCIONES (Manteniendo las restricciones anteriores)
+
+    // Para sumas/restas: [-14, 14] excluyendo el 0
+    function getSumInt() {
+        let num;
+        do {
+            num = getRandomInt(-14, 14);
+        } while (num === 0);
+        return num;
+    }
+
+    // Para sumas/restas (Naturales): [1, 14]
+    function getSumNatural() {
+        return getRandomInt(1, 14);
+    }
+
+    // Para multiplicadores/divisores: [-10, 10] excluyendo -1, 0, 1
+    function getMultInt() {
+        let num;
+        do {
+            num = getRandomInt(-10, 10);
+        } while (num === 0 || num === 1 || num === -1);
+        return num;
+    }
+
+    // Para multiplicadores/divisores (Naturales): [2, 10]
+    function getMultNatural() {
+        return getRandomInt(2, 10);
+    }
+
+    function updateScoreBoard() {
+        document.getElementById('exercise-counter').innerText = `Ejercicio ${currentExercise} de ${totalExercises}`;
+        let percentage = attemptedCount > 0 ? Math.round((correctCount / attemptedCount) * 100) : 0;
+        document.getElementById('score-display').innerText = `Puntos: ${score} (${percentage}%)`;
+    }
+
+    function generateQuestion() {
+        if (currentExercise > totalExercises) {
+            endGame();
+            return;
+        }
+
+        // Limpiar input y foco
+        const input = document.getElementById('user-answer');
+        input.value = '';
+        input.focus();
+        
+        // Elegir estructura aleatoria (0 a 5)
+        const type = Math.floor(Math.random() * 6);
+        let n1, n2, n3, n4, n5;
+        let text = "";
+        let ans = 0;
+
+        // Se aplican las funciones getSum* o getMult* según el rol del número en la operación
+        
+        switch(type) {
+            case 0: // N1-(N2-N3)+N4 (Todo sumas/restas)
+                n1 = getSumInt();
+                n2 = getSumInt();
+                n3 = getSumNatural(); 
+                n4 = getSumInt();
+                
+                text = `${n1} - (${n2} - ${n3}) + (${n4 < 0 ? n4 : n4})`; 
+                ans = n1 - (n2 - n3) + n4;
+                break;
+
+            case 1: // N1-N2*(N3-N4)+N5 (Producto limitado a 100)
+                n1 = getSumInt();
+                n2 = getMultNatural(); // Multiplicador [2, 10]
+                n5 = getSumInt();
+                
+                let factorB1;
+                let product1;
+                
+                // Generar N3 y N4 hasta que el producto N2 * (N3 - N4) sea <= 100
+                do {
+                    n3 = getSumInt();      // Término de resta
+                    n4 = getSumNatural();  // Término de resta
+                    factorB1 = n3 - n4;
+                    product1 = n2 * factorB1;
+                // Se asegura que el producto es <= 100 y que el factor resultante (N3-N4) no es trivial (0, 1, -1)
+                } while (Math.abs(product1) > 100 || Math.abs(factorB1) < 2);
+                
+                text = `${n1} - ${n2} · (${n3} - ${n4}) + (${n5 < 0 ? n5 : n5})`;
+                ans = n1 - product1 + n5;
+                break;
+
+            case 2: // N1:(N2-N3)-N4 (División exacta)
+                // Usaremos rangos de mult para los componentes de la división para evitar trivialidad
+                let divisor = 0;
+                let validDivision = false;
+                
+                // Bucle para asegurar división exacta, no trivial y que N1 sea pequeño (<= 10)
+                while (!validDivision) {
+                    let Q = getMultInt(); // Cociente no trivial [-10, -2] U [2, 10]
+                    divisor = getMultInt(); // Divisor no trivial [-10, -2] U [2, 10]
+                    
+                    n1 = Q * divisor; // N1 calculado
+                    // Ahora N2 - N3 = divisor
+                    n3 = getSumNatural(); // N3 es un sumando natural [1, 14]
+                    n2 = divisor + n3;
+                    
+                    // Condición: N1 debe estar en el rango de números simples.
+                    if (n1 >= -10 && n1 <= 10 && n1 !== 0) {
+                         validDivision = true;
+                    }
+                    // Si el producto N1 excede +-10, se regenera, manteniendo la dificultad.
+                }
+
+                n4 = getSumNatural(); // Término resta final
+
+                text = `${n1} : (${n2} - ${n3}) - ${n4}`;
+                ans = (n1 / (n2 - n3)) - n4;
+                break;
+
+            case 3: // N1-(-N2)+N3-N4*N5
+                n1 = getSumInt();
+                n2 = getSumNatural(); // Dentro de resta
+                n3 = getSumInt();
+                n4 = getMultInt(); // Multiplicador [-10, -2] U [2, 10]
+                n5 = getMultInt(); // Multiplicador [-10, -2] U [2, 10]
+
+                // El producto máximo ya está limitado a 10*10 = 100 por las funciones getMultInt
+                let product3 = n4 * n5;
+
+                let n4Str = n4 < 0 ? `(${n4})` : n4;
+                let n5Str = n5 < 0 ? `(${n5})` : n5;
+                
+                text = `${n1} - (-${n2}) + (${n3 < 0 ? n3 : n3}) - ${n4Str} · ${n5Str}`;
+                ans = n1 - (-n2) + n3 - product3;
+                break;
+
+            case 4: // N1-(N2-(N3-N4))+N5 (Todo sumas)
+                n1 = getSumInt();
+                n2 = getSumInt();
+                n3 = getSumInt();
+                n4 = getSumInt();
+                n5 = getSumInt();
+
+                text = `${n1} - (${n2} - (${n3} - (${n4 < 0 ? n4 : n4}))) + (${n5 < 0 ? n5 : n5})`;
+                ans = n1 - (n2 - (n3 - n4)) + n5;
+                break;
+
+            case 5: // N1-N2*(N3-N4) (Producto limitado a 100)
+                n1 = getSumInt();
+                n2 = getMultInt(); // Factor multiplicador [-10, -2] U [2, 10]
+                
+                let factorB5;
+                let product5;
+
+                // Generar N3 y N4 hasta que el producto N2 * (N3 - N4) sea <= 100
+                do {
+                    n3 = getSumInt();
+                    n4 = getSumInt();
+                    factorB5 = n3 - n4;
+                    product5 = n2 * factorB5;
+                // Se asegura que el producto es <= 100 y que el factor resultante (N3-N4) no es trivial (0, 1, -1)
+                } while (Math.abs(product5) > 100 || Math.abs(factorB5) < 2);
+
+
+                let n2Str = n2 < 0 ? `(${n2})` : n2;
+                let n4Str5 = n4 < 0 ? n4 : n4;
+
+                text = `${n1} - ${n2Str} · (${n3} - (${n4Str5}))`;
+                ans = n1 - product5;
+                break;
+        }
+
+        // Limpieza visual básica
+        text = text.replace(/\+\s*\((\d+)\)/g, "+ $1"); 
+        text = text.replace(/-\s*\((\d+)\)/g, "- $1");
+        
+        currentQuestionText = text;
+        currentSolution = ans;
+        document.getElementById('problem-container').innerText = currentQuestionText;
+    }
+
+    function checkAnswer() {
+        if (isWaiting) return;
+
+        const input = document.getElementById('user-answer');
+        let userVal = input.value.trim();
+
+        // Permitir que el usuario use coma o punto para decimales
+        userVal = userVal.replace(',', '.');
+
+        if (userVal === "") return; // No hacer nada si está vacío
+
+        isWaiting = true;
+        const userNum = parseFloat(userVal); 
+        
+        // Comparación con margen de error ínfimo para evitar problemas de coma flotante
+        const isCorrect = Math.abs(userNum - currentSolution) < 0.001; 
+
+        const feedbackEl = document.getElementById('feedback-msg');
+        const checkBtn = document.getElementById('btn-check');
+
+        // Guardar historial
+        userHistory.push({
+            question: currentQuestionText,
+            userAnswer: userNum,
+            correctAnswer: currentSolution,
+            isCorrect: isCorrect
+        });
+
+        // Incrementamos siempre el contador de intentos al responder
+        attemptedCount++;
+
+        if (isCorrect) {
+            score += 0.5;
+            correctCount++;
+            feedbackEl.innerHTML = `¡Correcto! La solución es ${currentSolution}`;
+            feedbackEl.className = "feedback correct";
+        } else {
+            // No sumamos puntos (score += 0)
+            feedbackEl.innerHTML = `Incorrecto. La solución correcta era ${currentSolution}`;
+            feedbackEl.className = "feedback incorrect";
+        }
+
+        // Actualizar variables globales y marcador
+        SCORMRawScore = score;
+        updateScoreBoard();
+
+        // UI Feedback
+        feedbackEl.classList.remove('hidden');
+        checkBtn.classList.add('hidden'); // Ocultar botón comprobar
+
+        // Esperar 3 segundos
+        setTimeout(() => {
+            feedbackEl.classList.add('hidden');
+            checkBtn.classList.remove('hidden');
+            isWaiting = false;
+            currentExercise++;
+            generateQuestion();
+        }, 3000);
+    }
+
+    function endGame() {
+        // Ocultar elementos de juego
+        document.getElementById('problem-container').classList.add('hidden');
+        document.getElementById('input-container').classList.add('hidden');
+        document.getElementById('feedback-msg').classList.add('hidden');
+
+        // Mostrar mensaje final
+        const finalDiv = document.getElementById('final-feedback');
+        finalDiv.classList.remove('hidden');
+
+        let msg = "";
+        let emojis = "";
+
+        // Formato de puntuación final
+        let finalScore = score; 
+
+        if (finalScore > 8) {
+            msg = `¡Has obtenido ${finalScore} puntos! <br>¡Felicidades! ¡Eres un CRACK de las mates!`;
+            emojis = "🏆 🚀 🌟";
+        } else if (finalScore >= 5) {
+            msg = `¡Has obtenido ${finalScore} puntos! <br>¡Buen trabajo! Pero puedes hacerlo aún mejor si sigues practicando.`;
+            emojis = "👏 📚 😎";
+        } else {
+            msg = `Has obtenido ${finalScore} puntos. <br>Lo siento, no te desanimes. ¡Inténtalo de nuevo, tú puedes!`;
+            emojis = "😢 💪 🍀";
+        }
+
+        finalDiv.innerHTML = `<div>${msg}</div><div style="font-size: 2em; margin-top:10px;">${emojis}</div>`;
+        
+        // Actualizar ejercicio X de 20 para que diga 20 de 20
+        document.getElementById('exercise-counter').innerText = `Ejercicio 20 de 20`;
+    }
+
+    function restartGame() {
+        // En un entorno de navegador, se usa window.confirm()
+        if(confirm("¿Seguro que quieres reiniciar el juego? Perderás el progreso actual.")) {
+            initGame();
+        }
+    }
+
+    function saveScore() {
+        // Simulación de guardado
+        // Importante: No se usa alert() en el entorno real, pero aquí lo mantengo para demostración.
+        // En una aplicación real se usaría un modal o notificación.
+        alert(`Puntuación guardada: ${SCORMRawScore} puntos.`);
+        // Aquí iría la llamada a la API SCORM real si existiera:
+        // SCORM.set("cmi.core.score.raw", SCORMRawScore);
+    }
+
+    function toggleAnswers() {
+        const section = document.getElementById('answers-section');
+        const tbody = document.getElementById('answers-body');
+        
+        if (section.classList.contains('hidden')) {
+            // Generar tabla
+            tbody.innerHTML = "";
+            if (userHistory.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='3'>Aún no has respondido ninguna pregunta.</td></tr>";
+            } else {
+                userHistory.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = item.isCorrect ? 'correct-row' : 'incorrect-row';
+                    
+                    row.innerHTML = `
+                        <td>${item.question}</td>
+                        <td>${item.userAnswer}</td>
+                        <td>${item.correctAnswer}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            section.classList.remove('hidden');
+        } else {
+            section.classList.add('hidden');
+        }
+    }
+</script>
+</body>
+</html>
