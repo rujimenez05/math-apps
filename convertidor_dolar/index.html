@@ -85,7 +85,7 @@
     <div class="rule"><strong>Expresiones en línea</strong><br><code>$…$</code> <span aria-hidden="true">→</span> <code>\(…\)</code></div>
   </div>
   <h2>Privacidad y recomendaciones</h2>
-  <p class="note">El archivo original no se modifica. La herramienta abre el proyecto como ZIP, cambia únicamente <code>content.xml</code> (en <code>.elpx</code>) o <code>contentv3.xml</code> (en <code>.elp</code>) y vuelve a empaquetar el proyecto. Revisa el archivo resultante en eXeLearning antes de distribuirlo. Los signos <code>$</code> que parecen monedas (<code>5$</code>, <code>$5 y $10</code>, <code>cuesta 5$ y 10$</code>) no se convierten: una fórmula en línea debe empezar con un carácter que no sea espacio justo después del <code>$</code>, terminar con uno justo antes del <code>$</code> de cierre, y este no puede ir seguido de un número. Por eso, una fórmula como <code>$ x $</code> (con espacios) tampoco se convertiría; escríbela como <code>$x$</code>.</p>
+  <p class="note">El archivo original no se modifica. La herramienta abre el proyecto como ZIP, cambia únicamente <code>content.xml</code> (en <code>.elpx</code>) o <code>contentv3.xml</code> (en <code>.elp</code>) y vuelve a empaquetar el proyecto. Revisa el archivo resultante en eXeLearning antes de distribuirlo. Los signos <code>$</code> que parecen monedas (<code>5$</code>, <code>$5 y $10</code>, <code>cuesta 5$ y 10$</code>) no se convierten: una fórmula en línea debe empezar con un carácter que no sea espacio justo después del <code>$</code>, terminar con uno justo antes del <code>$</code> de cierre, y este no puede ir seguido de un número. Por eso, una fórmula como <code>$ x $</code> (con espacios) tampoco se convertiría; escríbela como <code>$x$</code>. Solo se convierte el texto visible: el código (<code>script</code>, <code>code</code>, <code>pre</code>) y los atributos de las etiquetas, como <code>onclick</code>, se dejan como están, y una fórmula no puede pasar de un párrafo a otro. Las fórmulas de los juegos (preguntas rápidas, adivina…) no se convierten, porque eXeLearning guarda sus datos cifrados.</p>
   <footer>La biblioteca JSZip se carga desde una CDN, por lo que se necesita conexión a Internet para abrir la aplicación. Los archivos seleccionados se procesan localmente en el navegador.<br>© 2026 Rubén Jiménez Jiménez · Distribuido bajo la <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">licencia Apache 2.0</a>: puedes usar, copiar, distribuir y modificar la aplicación manteniendo el reconocimiento de autoría. Se ofrece «tal cual», sin garantías.</footer>
 </main>
 
@@ -184,20 +184,106 @@
   // blanco y NO va seguido de un dígito ni de otro $. Así «5$», «$5 y $10» o
   // «cuesta 5$ y 10$» no se interpretan como matemáticas.
   const INLINE = /(?<![\p{L}\p{N}$\\])\$(?!\$)(?=\S)([^$\n]*?\S)\$(?![\p{N}$])/gu;
+  // Bloque: los $$ se emparejan dentro del mismo trozo de texto, aunque vayan en su propia línea.
+  const BLOCK = /(?<!\\)\$\$([\s\S]*?\S[\s\S]*?)\$\$/g;
+  // Elementos HTML cuyo contenido no es texto para leer (código, scripts, estilos).
+  const SKIP_TAGS = new Set(['script', 'style', 'code', 'pre', 'kbd', 'samp', 'textarea']);
+  const HTML_TOKEN = /<!--[\s\S]*?-->|<\/?([A-Za-z][\w:-]*)(?:[^>"']|"[^"]*"|'[^']*')*>|<![^>]*>/g;
+  const XML_TOKEN = /<!--[\s\S]*?-->|<!\[CDATA\[([\s\S]*?)\]\]>|<\?[\s\S]*?\?>|<!DOCTYPE[^>]*>|<(\/?)([\w:.-]+)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
+  const XML_ENTITIES = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
 
-  function convertDelimiters(text, jsonEscaped, counts) {
-    const slash = jsonEscaped ? '\\\\' : '\\';
-    text = text.replace(/(?<!\\)\$\$(?=\S)(.+?)\$\$/gs, (_, inside) => {
+  // Convierte un trozo de texto visible, sin etiquetas.
+  function convertText(text, counts) {
+    if (!text.includes('$')) return text;
+    text = text.replace(BLOCK, (_, inside) => {
       counts.block++;
-      return slash + '[' + inside + slash + ']';
+      return '\\[' + inside + '\\]';
     });
-    text = text.replace(INLINE, (m, inside) => {
-      // En JSON un salto de línea real es \n (una sola barra); \\right o \\neq de LaTeX llevan dos barras y no cuentan.
-      if (jsonEscaped && /(?<!\\)(?:\\\\)*\\[nr]/.test(inside)) return m;
+    return text.replace(INLINE, (_, inside) => {
       counts.inline++;
-      return slash + '(' + inside + slash + ')';
+      return '\\(' + inside + '\\)';
     });
-    return text;
+  }
+
+  // Convierte solo el texto visible de un fragmento HTML: las etiquetas, sus atributos
+  // (onclick…) y el contenido de script, style, code o pre no se tocan, y una fórmula
+  // nunca cruza una etiqueta (por ejemplo, de un párrafo al siguiente).
+  function convertHtml(html, counts) {
+    if (!html.includes('$')) return html;
+    let out = '', last = 0, skip = null;
+    HTML_TOKEN.lastIndex = 0;
+    for (let m; (m = HTML_TOKEN.exec(html));) {
+      const text = html.slice(last, m.index);
+      out += (skip ? text : convertText(text, counts)) + m[0];
+      last = HTML_TOKEN.lastIndex;
+      const name = m[1] && m[1].toLowerCase();
+      if (!name) continue;
+      const closing = m[0][1] === '/';
+      if (skip) { if (closing && name === skip) skip = null; }
+      else if (!closing && SKIP_TAGS.has(name) && !m[0].endsWith('/>')) skip = name;
+    }
+    const rest = html.slice(last);
+    return out + (skip ? rest : convertText(rest, counts));
+  }
+
+  // En jsonProperties se convierte el valor de cada cadena JSON (no las claves) y solo
+  // se reescriben las cadenas que cambian.
+  function convertJson(json, counts) {
+    const fail = () => new Error('La conversión ha detectado un bloque jsonProperties que no es JSON válido. No se ha generado el archivo.');
+    try { JSON.parse(json); } catch (_) { throw fail(); }
+    const out = json.replace(/"(?:[^"\\]|\\.)*"(\s*:)?/g, (literal, key) => {
+      if (key || !literal.includes('$')) return literal;
+      const value = JSON.parse(literal);
+      const converted = convertHtml(value, counts);
+      return converted === value ? literal : JSON.stringify(converted);
+    });
+    try { JSON.parse(out); } catch (_) { throw fail(); }
+    return out;
+  }
+
+  function decodeXml(s) {
+    return s.replace(/&(?:#(\d+)|#x([\dA-Fa-f]+)|(lt|gt|amp|quot|apos));/g,
+      (_, dec, hex, name) => dec ? String.fromCodePoint(+dec) : hex ? String.fromCodePoint(parseInt(hex, 16)) : XML_ENTITIES[name]);
+  }
+  function encodeXmlText(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function encodeXmlAttr(s, quote) {
+    return encodeXmlText(s).replace(quote === '"' ? /"/g : /'/g, quote === '"' ? '&quot;' : '&apos;')
+      .replace(/\t/g, '&#9;').replace(/\n/g, '&#10;').replace(/\r/g, '&#13;');
+  }
+
+  // Recorre el XML del proyecto. El HTML puede estar en secciones CDATA (eXeLearning 3.1 y
+  // posteriores), como texto escapado (versiones 3.0) o en atributos (contentv3.xml de los
+  // .elp). Cada valor se descodifica, se convierte y solo se vuelve a escribir si ha cambiado:
+  // el resto del archivo queda idéntico.
+  function convertXml(xml, counts) {
+    let out = '', last = 0, element = '';
+    const convert = s => element === 'jsonProperties' ? convertJson(s, counts) : convertHtml(s, counts);
+    const text = s => {
+      if (!s.includes('$')) return s;
+      const decoded = decodeXml(s), converted = convert(decoded);
+      return converted === decoded ? s : encodeXmlText(converted);
+    };
+    XML_TOKEN.lastIndex = 0;
+    for (let m; (m = XML_TOKEN.exec(xml));) {
+      out += text(xml.slice(last, m.index));
+      last = XML_TOKEN.lastIndex;
+      if (m[1] !== undefined) {
+        out += '<![CDATA[' + (m[1].includes('$') ? convert(m[1]) : m[1]) + ']]>';
+      } else if (m[3]) {
+        element = m[2] || m[4].trimEnd().endsWith('/') ? '' : m[3];
+        const attrs = m[4].replace(/(=\s*)(["'])([\s\S]*?)\2/g, (attr, eq, quote, value) => {
+          if (!value.includes('$')) return attr;
+          const decoded = decodeXml(value), converted = convertHtml(decoded, counts);
+          return converted === decoded ? attr : eq + quote + encodeXmlAttr(converted, quote) + quote;
+        });
+        out += '<' + m[2] + m[3] + attrs + '>';
+      } else {
+        out += m[0];
+      }
+    }
+    return out + text(xml.slice(last));
   }
 
   convertButton.addEventListener('click', async () => {
@@ -230,26 +316,9 @@
       }
 
       const counts = { block: 0, inline: 0 };
-      // Las fórmulas están en el HTML y también dentro de jsonProperties (JSON en CDATA),
-      // donde las barras invertidas deben duplicarse para mantener JSON válido.
-      const jsonBlockPattern = /(<jsonProperties>\s*<!\[CDATA\[)([\s\S]*?)(\]\]>\s*<\/jsonProperties>)/g;
-      let cursor = 0, rebuilt = '', jsonBlocks = 0;
-      for (const match of xml.matchAll(jsonBlockPattern)) {
-        rebuilt += convertDelimiters(xml.slice(cursor, match.index), false, counts);
-        const jsonText = convertDelimiters(match[2], true, counts);
-        try { JSON.parse(jsonText); } catch (_) {
-          throw new Error('La conversión ha detectado un bloque jsonProperties que no es JSON válido. No se ha generado el archivo.');
-        }
-        rebuilt += match[1] + jsonText + match[3];
-        cursor = match.index + match[0].length;
-        jsonBlocks++;
-      }
-      rebuilt += convertDelimiters(xml.slice(cursor), false, counts);
-      xml = rebuilt;
-
-      if (jsonBlocks === 0 && /<jsonProperties\b/.test(xml)) {
-        throw new Error('No se ha podido identificar de forma segura un bloque jsonProperties. No se ha generado el archivo.');
-      }
+      // Las fórmulas están en el HTML y también dentro de jsonProperties (JSON), donde
+      // cada cadena se vuelve a codificar para mantener JSON válido.
+      xml = convertXml(xml, counts);
       const parsed = new DOMParser().parseFromString(xml, 'application/xml');
       if (parsed.querySelector('parsererror')) {
         throw new Error('El XML resultante no supera la validación. No se ha creado la descarga.');

@@ -41,7 +41,7 @@ Un `.elpx` es un archivo ZIP. La herramienta:
 
 1. Abre el proyecto con [JSZip](https://stuk.github.io/jszip/).
 2. Localiza el único `content.xml` y lo lee como UTF-8.
-3. Convierte los delimitadores en el contenido HTML y también dentro de los bloques `jsonProperties` (JSON serializado en CDATA), duplicando las barras invertidas en el JSON para que siga siendo válido.
+3. Convierte los delimitadores en el contenido HTML y también dentro de los bloques `jsonProperties` (JSON), volviendo a codificar cada cadena para que el JSON siga siendo válido. Solo cambia el **texto visible**: no toca las etiquetas ni sus atributos (por ejemplo, `onclick`), ni el contenido de `script`, `style`, `code`, `pre`, `kbd`, `samp` o `textarea`, ni los comentarios. Una fórmula no puede cruzar una etiqueta, así que nunca pasa de un párrafo a otro. Funciona igual si el HTML está en secciones CDATA, como texto escapado (proyectos de eXeLearning 3.0) o en atributos (`contentv3.xml` de los `.elp`), y solo se reescriben los valores que cambian.
 4. Valida que cada bloque JSON y el XML final son correctos. Si alguna validación falla, **no genera ningún archivo**.
 5. Vuelve a empaquetar el proyecto como un nuevo `.elpx`. El resto de ficheros del ZIP no se tocan.
 
@@ -56,6 +56,8 @@ Para no estropear textos con importes como `5$`, una expresión en línea `$…$
 - El `$` de cierre **no va seguido de un número** ni de otro `$`.
 - La fórmula no cruza saltos de línea.
 
+Las expresiones de bloque `$$…$$` se emparejan dentro del mismo párrafo y pueden ocupar varias líneas o llevar espacios junto a los `$$`.
+
 | Texto | ¿Se convierte? |
 |---|---|
 | `$x^2$` | Sí |
@@ -64,14 +66,18 @@ Para no estropear textos con importes como `5$`, una expresión en línea `$…$
 | `entre $5 y $10` | No |
 | `de $5-$10` | No |
 | `$ x $` (con espacios) | No |
+| `$$ x $$` o `$$` en su propia línea | Sí |
+| `<code>$x$</code>` | No (es código) |
+| `onclick="$('a').click()"` | No (es un atributo) |
 
 Al terminar, el estado indica cuántos signos `$` se han dejado sin cambios.
 
 ## Limitaciones
 
 - **Las fórmulas con espacios junto a los `$` no se convierten.** `$ x $` hay que escribirlo como `$x$`.
-- **Casos ambiguos:** un texto como `$5$` se interpreta como fórmula, porque es indistinguible de una.
-- **Se presupone que los `$` se usan como delimitadores matemáticos.** Los `$` que no cumplen las reglas anteriores se dejan intactos, pero otros usos (por ejemplo, código que contenga `$…$` con la forma de una fórmula) podrían convertirse. Revisa el resultado.
+- **Casos ambiguos:** un texto como `$5$` se interpreta como fórmula, porque es indistinguible de una. Lo mismo ocurre con dos importes en el mismo párrafo escritos de forma distinta, como `Pagas $5. Te devuelven 3$.`
+- **Las fórmulas de los juegos no se convierten.** Los iDevices de juego (preguntas rápidas, adivina, crucigrama…) guardan sus datos cifrados, y la herramienta no los modifica.
+- **Se presupone que los `$` del texto visible se usan como delimitadores matemáticos.** El código y los atributos no se tocan, pero un `$` escrito en el texto normal con la forma de una fórmula se convierte. Revisa el resultado.
 - **Solo modifica `content.xml`.** Si hay fórmulas en otros ficheros del proyecto, no se tocan.
 - **Requiere un único `content.xml`.** Si el proyecto tiene varios o ninguno, la herramienta se detiene con un mensaje de error.
 - **Requiere codificación UTF-8** en `content.xml`.
